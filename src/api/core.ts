@@ -1,3 +1,4 @@
+import { ChatCompletionMessage } from "openai/resources/chat/completions";
 import { config } from "./config";
 import { openai } from "./index";
 
@@ -12,6 +13,19 @@ type CompletionOptions = {
   model?: string;
   maxTokens?: number;
   messages: Message[];
+};
+
+export const completion = async ({
+  model = config.MODELS.GPT4,
+  maxTokens = config.MAX_TOKENS.DEFAULT,
+  messages,
+}: CompletionOptions) => {
+  const response = await openai.chat.completions.create({
+    model,
+    messages: messages as any,
+    max_tokens: maxTokens,
+  });
+  return response.choices[0].message;
 };
 
 export const transcription = (uri: string) => {
@@ -34,55 +48,28 @@ export const transcription = (uri: string) => {
   }).then((response) => response.json());
 };
 
-export const completion = async (prompt: string, systemPrompt: string) => {
-  const response = await openai.chat.completions.create({
-    model: config.MODELS.GPT4,
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: prompt },
-    ],
-  });
-  return response.choices[0].message;
-};
-
-export const createCompletion = async ({
-  model = config.MODELS.GPT35,
-  maxTokens = config.MAX_TOKENS.DEFAULT,
-  messages,
-}: CompletionOptions) => {
-  const response = await openai.chat.completions.create({
-    model,
-    messages: messages as any,
-    max_tokens: maxTokens,
-  });
-  return response.choices[0].message;
-};
-
 export const submitImage = async (
   prompt: string,
   base64Image: string
-): Promise<any> => {
+): Promise<ChatCompletionMessage | null> => {
   try {
-    const response = await openai.chat.completions.create({
-      model: config.MODELS.GPT4,
-      messages: [
+    const imageMessage = {
+      role: "user",
+      content: [
+        { type: "text", text: prompt },
         {
-          role: "user",
-          content: [
-            { type: "text", text: prompt },
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:image/jpeg;base64,${base64Image}`,
-              },
-            },
-          ],
+          type: "image_url",
+          image_url: {
+            url: `data:image/jpeg;base64,${base64Image}`,
+          },
         },
       ],
-      max_tokens: config.MAX_TOKENS.DEFAULT,
+    } as Message;
+    const response = await completion({
+      messages: [imageMessage],
     });
 
-    return response.choices[0].message;
+    return response;
   } catch (error) {
     console.error("Error analyzing food image:", error);
     return null;

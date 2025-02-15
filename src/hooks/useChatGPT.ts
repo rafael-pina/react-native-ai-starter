@@ -1,5 +1,4 @@
 import { api } from "@/api";
-// import { prompts } from '@/api/prompts';
 import { Meal } from "@/types";
 import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
@@ -53,7 +52,9 @@ export const useChatGPT = (): useChatGPTHook => {
 
   const completionMutation = useMutation<CompletionResponse, Error, string>({
     mutationFn: async (content: string) => {
-      const response = await api.gpt.completion(content, prompts.system);
+      const response = await api.gpt.completion({
+        messages: [{ role: "user", content }],
+      });
       return { content: response.content || "" };
     },
   });

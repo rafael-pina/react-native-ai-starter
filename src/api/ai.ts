@@ -1,5 +1,5 @@
 import { config } from "./config";
-import { createCompletion } from "./core";
+import { completion } from "./core";
 import { cleanResponseContent } from "@/utils";
 
 export const createPromptCompletion = async (
@@ -7,7 +7,7 @@ export const createPromptCompletion = async (
   userPrompt: string | Array<{ type: string; text?: string }>
 ) => {
   try {
-    const response = await createCompletion({
+    const response = await completion({
       model: config.MODELS.GPT4,
       messages: [
         { role: "system", content: systemPrompt },
